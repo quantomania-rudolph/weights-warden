@@ -1,0 +1,28 @@
+CIRCUIT CONTRAST (needed-for-training-labels minus needed-for-expert-behaviour-on-new-layouts; damage in L1 units x1000; higher contrast = more memorisation-like).
+validation: first-order EAP vs exact on edges Spearman=0.22 (low: do not trust first-order at edge level); neuron first-order vs exact Spearman=0.87 (n=40).
+TOP NODES by contrast (node = a head or MLP block; removing it from every reader):  node | A(train) | B(held-out) | contrast
+  embed       504.3    385.1    119.2
+  D1.mlp       99.9      5.8     94.1
+  E1.mlp       83.3     -7.9     91.2
+  query       119.3     41.7     77.5
+  D0.mlp       85.6     11.4     74.2
+  D0.xh2       86.7     18.6     68.0
+  E0.mlp       55.6      8.8     46.8
+  E0.h2        34.0     -8.9     42.9
+  D0.xh1       39.2     -0.4     39.6
+  D0.xh0       55.1     22.3     32.8
+TOP EDGES by contrast:  writer->reader | A | B | contrast
+  embed->E0.mlp        235.2    83.3   151.9
+  embed->E0.attn       116.4   -25.9   142.3
+  D1.mlp->final         99.9     5.8    94.1
+  E1.mlp->mem           83.3    -7.9    91.2
+  embed->E1.attn       156.8    65.9    90.9
+  embed->mem           347.0   257.7    89.2
+  embed->E1.mlp        195.8   133.3    62.5
+  query->D0.self        81.6    21.8    59.7
+  D0.mlp->D1.self       37.1    -3.1    40.2
+  D0.xh2->D0.mlp        41.0     1.3    39.7
+  D0.xh1->D0.mlp        26.5    -0.4    26.9
+  E0.mlp->E1.attn       16.8    -9.3    26.1
+TOP NEURONS by first-order contrast (block, index): E1.mlp:133, E1.mlp:179, E1.mlp:246, E1.mlp:52, E1.mlp:136, E1.mlp:48, E0.mlp:255, D0.mlp:53, E0.mlp:229, E0.mlp:197, D0.mlp:126, E1.mlp:188, E0.mlp:116, E1.mlp:103, E1.mlp:53, D0.mlp:118, D0.mlp:101, D1.mlp:63, D1.mlp:145, E1.mlp:20, D1.mlp:135, E1.mlp:70, E0.mlp:226, E0.mlp:57, E1.mlp:59, E0.mlp:44, E1.mlp:18, E0.mlp:40, D0.mlp:127, E0.mlp:190
+naming: E{l}.h{h} = encoder layer l self-attn head h (op scale_head kind=enc_self); D{l}.sh{h} = decoder self-attn (dec_self); D{l}.xh{h} = decoder cross-attn (dec_cross); E/D{l}.mlp = MLP block (op scale_neurons kind=enc|dec).

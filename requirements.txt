@@ -1,0 +1,6 @@
+# tested with Python 3.10+ ; CPU is enough for everything here
+torch>=2.1          # tested 2.15.0 (cpu)
+transformers>=4.40  # tested 4.57.6 (HF GPT-2 / Llama / OPT model maps)
+numpy>=1.26         # tested 2.5.3
+scipy>=1.11         # tested 1.18.1 (clustering in the baseline map)
+pytest>=8           # tests only

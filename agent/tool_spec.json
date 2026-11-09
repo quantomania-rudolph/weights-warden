@@ -1,0 +1,776 @@
+{
+ "llm": [
+  {
+   "name": "inventory",
+   "description": "Every editable component (blocks, heads, MLP banks, matrices with guessed roles) and the op that edits it.",
+   "parameters": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false,
+    "required": []
+   }
+  },
+  {
+   "name": "pairs_check",
+   "description": "Quality-check clean/corrupt prompt pairs in a JSON file (equal length, model prefers `correct` on clean, corruption hurts). Returns which pairs are usable and why others are not.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "file": {
+      "type": "string",
+      "description": "path to pairs.json"
+     },
+     "ckpt": {
+      "type": "string",
+      "description": "checkpoint to analyse: 0..9 or final (default: the target)"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "file"
+    ]
+   }
+  },
+  {
+   "name": "circuit",
+   "description": "Find the circuit for one behaviour: exact patching of every head and MLP unit over the usable pairs, t-stat + sign-agreement selection, faithfulness. edges=true adds edge attribution checked against exact edge patching. Saves it under `name`.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "file": {
+      "type": "string",
+      "description": "path to pairs.json"
+     },
+     "name": {
+      "type": "string",
+      "description": "name to save the circuit under"
+     },
+     "top_frac": {
+      "type": "number",
+      "description": "share of total importance to cover (default 0.8)"
+     },
+     "edges": {
+      "type": "boolean",
+      "description": "also compute top edges"
+     },
+     "ckpt": {
+      "type": "string",
+      "description": "checkpoint to analyse (default: the target)"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "file",
+     "name"
+    ]
+   }
+  },
+  {
+   "name": "grow",
+   "description": "(optional arg `baseline`: name of a baseline map whose co-active neighbours are offered as extra growth candidates.) Grow a circuit until keeping ONLY it clean recovers `target` of the behaviour (necessary -> sufficient). Adds upstream writers (exact edge patching), whole MLP banks and single nodes, then prunes. Saves it under `name`.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "file": {
+      "type": "string",
+      "description": "path to pairs.json"
+     },
+     "name": {
+      "type": "string",
+      "description": "name to save under"
+     },
+     "target": {
+      "type": "number",
+      "description": "sufficiency target (default 0.8)"
+     },
+     "top_frac": {
+      "type": "number",
+      "description": "seed coverage (default 0.8)"
+     },
+     "baseline": {
+      "type": "string",
+      "description": "baseline map name"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "file",
+     "name"
+    ]
+   }
+  },
+  {
+   "name": "baseline",
+   "description": "Map what lights up on NORMAL in-distribution prompts: per-layer dead / always-on units and clusters of units that co-activate. Correlational, not causal; read it as a starting map.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "name": {
+      "type": "string",
+      "description": "name to save under"
+     },
+     "n": {
+      "type": "integer",
+      "description": "number of prompts (default 512)"
+     },
+     "where": {
+      "type": "string",
+      "description": "last (decision position) or all"
+     },
+     "min_corr": {
+      "type": "number",
+      "description": "cluster threshold (default 0.6)"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "name"
+    ]
+   }
+  },
+  {
+   "name": "neighbors",
+   "description": "Units that co-activate with a saved circuit (candidate connective tissue). With `file` (pairs) the candidates are verified: informative only if adding them beats the same number of random units.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "name": {
+      "type": "string",
+      "description": "baseline name"
+     },
+     "circuit": {
+      "type": "string",
+      "description": "saved circuit name"
+     },
+     "file": {
+      "type": "string",
+      "description": "pairs.json for verification"
+     },
+     "min_corr": {
+      "type": "number",
+      "description": "default 0.5"
+     },
+     "k": {
+      "type": "integer",
+      "description": "how many candidates (default 32)"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "circuit"
+    ]
+   }
+  },
+  {
+   "name": "union",
+   "description": "Macro circuit: nodes present in at least min_frac of several saved circuits (build the circuits from different related prompt sets).",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "names": {
+      "type": "string",
+      "description": "comma-separated circuit names"
+     },
+     "min_frac": {
+      "type": "number",
+      "description": "fraction of circuits (default 0.6)"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "names"
+    ]
+   }
+  },
+  {
+   "name": "overlap",
+   "description": "Compare saved circuits: Jaccard, nodes shared by all behaviours, nodes specific to each.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "names": {
+      "type": "string",
+      "description": "comma-separated circuit names"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "names"
+    ]
+   }
+  },
+  {
+   "name": "proposals",
+   "description": "Turn a saved circuit's nodes into ready-to-propose edit configs (edit ONLY circuit nodes).",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "name": {
+      "type": "string",
+      "description": "circuit name"
+     },
+     "gamma": {
+      "type": "number",
+      "description": "scale factor for the proposed edits (default 0)"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "name"
+    ]
+   }
+  },
+  {
+   "name": "weights",
+   "description": "RAW weights of any matrix/parameter slice (<=4000 values). rows/cols as 'a:b'.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "matrix": {
+      "type": "string",
+      "description": "matrix or parameter name"
+     },
+     "rows": {
+      "type": "string",
+      "description": "a:b"
+     },
+     "cols": {
+      "type": "string",
+      "description": "a:b"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "matrix"
+    ]
+   }
+  },
+  {
+   "name": "diff",
+   "description": "Per-matrix relative weight change between two checkpoints (ints 0..9 or 'final').",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "a": {
+      "type": "string",
+      "description": "checkpoint a"
+     },
+     "b": {
+      "type": "string",
+      "description": "checkpoint b"
+     },
+     "top": {
+      "type": "integer",
+      "description": "how many"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "a",
+     "b"
+    ]
+   }
+  },
+  {
+   "name": "list_ops",
+   "description": "The edit ops with every argument's allowed range for THIS model. Read it before proposing.",
+   "parameters": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false,
+    "required": []
+   }
+  },
+  {
+   "name": "note",
+   "description": "Write a research note to the ledger (before and after every charged evaluation).",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "kind": {
+      "type": "string",
+      "enum": [
+       "hypothesis",
+       "result",
+       "decision"
+      ]
+     },
+     "text": {
+      "type": "string",
+      "description": "the note"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "kind",
+     "text"
+    ]
+   }
+  },
+  {
+   "name": "screen",
+   "description": "FREE (uncharged) trial of one edit on research episodes, separate from the data the judge uses. Returns d_success with CI. Capped per run; use it to pick what to spend a charged proposal on.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "op": {
+      "type": "string",
+      "description": "op name"
+     },
+     "cfg": {
+      "type": "object",
+      "description": "the op's arguments"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "op",
+     "cfg"
+    ]
+   }
+  },
+  {
+   "name": "sweep",
+   "description": "FREE strength sweep: one op, one numeric parameter (e.g. gamma, or a dotted path like ops.1.cfg.gamma for a composite), 2-9 values. Returns the curve on research episodes and the best value. Each value uses one screen.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "op": {
+      "type": "string",
+      "description": "op name"
+     },
+     "cfg": {
+      "type": "object",
+      "description": "the op's arguments (the swept parameter's value is replaced)"
+     },
+     "param": {
+      "type": "string",
+      "description": "parameter name or dotted path"
+     },
+     "values": {
+      "type": "array",
+      "items": {
+       "type": "number"
+      },
+      "description": "2-9 values"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "op",
+     "cfg",
+     "param",
+     "values"
+    ]
+   }
+  },
+  {
+   "name": "propose",
+   "description": "CHARGED evaluation of one edit against the unedited model on the selection set (rejected proposals are charged too). Returns d_success, CI, id_drop, accepted.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "op": {
+      "type": "string",
+      "description": "op name"
+     },
+     "cfg": {
+      "type": "object",
+      "description": "the op's arguments"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "op",
+     "cfg"
+    ]
+   }
+  },
+  {
+   "name": "status",
+   "description": "Budget left and ledger integrity.",
+   "parameters": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false,
+    "required": []
+   }
+  },
+  {
+   "name": "state",
+   "description": "Compact digest of this run (budget, best charged edit, history, your notes). Use it to resume after a context reset.",
+   "parameters": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false,
+    "required": []
+   }
+  }
+ ],
+ "nav": [
+  {
+   "name": "inventory",
+   "description": "List every editable component (feedforward banks, attention-head groups, embeddings, output head) with the op that edits it.",
+   "parameters": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false,
+    "required": []
+   }
+  },
+  {
+   "name": "neuron_scan",
+   "description": "Rank MLP neurons of one block by label-free memorisation contrast (train labels vs expert behaviour on held-out scenarios). Larger = more memorisation-like.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "block": {
+      "type": "string",
+      "description": "enc0|enc1|dec0|dec1"
+     },
+     "top": {
+      "type": "integer",
+      "description": "how many"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "block"
+    ]
+   }
+  },
+  {
+   "name": "circuit",
+   "description": "EXACT edge-removal contrast over the residual graph (slow, ~90 s). Read the two damage columns, not only the contrast.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "top": {
+      "type": "integer",
+      "description": "how many"
+     }
+    },
+    "additionalProperties": false,
+    "required": []
+   }
+  },
+  {
+   "name": "heads",
+   "description": "How actions are produced: declared action heads (base/nudge/expert) if the model exposes them, else decoder readouts and the exact per-writer split.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "top": {
+      "type": "integer",
+      "description": "how many"
+     }
+    },
+    "additionalProperties": false,
+    "required": []
+   }
+  },
+  {
+   "name": "diff",
+   "description": "Per-module weight change and action change between two checkpoints (ints 0..9 or 'final').",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "a": {
+      "type": "string",
+      "description": "checkpoint a"
+     },
+     "b": {
+      "type": "string",
+      "description": "checkpoint b"
+     },
+     "top": {
+      "type": "integer",
+      "description": "how many"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "a",
+     "b"
+    ]
+   }
+  },
+  {
+   "name": "weights",
+   "description": "RAW weights of any matrix/parameter slice (<=4000 values). rows/cols as 'a:b'. If it answers raw_view DISABLED the run is the summary-only arm.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "matrix": {
+      "type": "string",
+      "description": "matrix or parameter name"
+     },
+     "rows": {
+      "type": "string",
+      "description": "e.g. 0:4"
+     },
+     "cols": {
+      "type": "string",
+      "description": "e.g. 0:8"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "matrix"
+    ]
+   }
+  },
+  {
+   "name": "qkv",
+   "description": "One attention head: Wq/Wk/Wv/Wo norms, QK and OV circuit spectra, most-read input dims, exact edit handles; dump=true adds raw slices.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "kind": {
+      "type": "string",
+      "enum": [
+       "enc_self",
+       "dec_self",
+       "dec_cross"
+      ]
+     },
+     "layer": {
+      "type": "integer",
+      "description": "layer"
+     },
+     "head": {
+      "type": "integer",
+      "description": "head"
+     },
+     "dump": {
+      "type": "boolean"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "kind",
+     "layer",
+     "head"
+    ]
+   }
+  },
+  {
+   "name": "attention",
+   "description": "Mean query x key attention of one head, entropy, example patterns.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "kind": {
+      "type": "string",
+      "enum": [
+       "enc_self",
+       "dec_self",
+       "dec_cross"
+      ]
+     },
+     "layer": {
+      "type": "integer",
+      "description": "layer"
+     },
+     "head": {
+      "type": "integer",
+      "description": "head"
+     },
+     "set": {
+      "type": "string",
+      "description": "heldout|train"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "kind",
+     "layer",
+     "head"
+    ]
+   }
+  },
+  {
+   "name": "activity",
+   "description": "MLP unit activations on train vs held-out states; lists the units that behave most differently.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "kind": {
+      "type": "string",
+      "enum": [
+       "enc",
+       "dec"
+      ]
+     },
+     "layer": {
+      "type": "integer",
+      "description": "layer"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "kind",
+     "layer"
+    ]
+   }
+  },
+  {
+   "name": "list_ops",
+   "description": "The edit ops with every argument's allowed range for THIS model. Read it before proposing.",
+   "parameters": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false,
+    "required": []
+   }
+  },
+  {
+   "name": "probe",
+   "description": "FREE research probe of one edit: teacher-forced L1 change on a research set (negative = closer to the expert). Not closed-loop success. 30 per run.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "op": {
+      "type": "string",
+      "description": "op name"
+     },
+     "cfg": {
+      "type": "object",
+      "description": "the op's arguments"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "op",
+     "cfg"
+    ]
+   }
+  },
+  {
+   "name": "note",
+   "description": "Write a research note to the ledger (do this before and after every charged evaluation).",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "kind": {
+      "type": "string",
+      "enum": [
+       "hypothesis",
+       "result",
+       "decision"
+      ]
+     },
+     "text": {
+      "type": "string",
+      "description": "the note"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "kind",
+     "text"
+    ]
+   }
+  },
+  {
+   "name": "screen",
+   "description": "FREE (uncharged) trial of one edit on research episodes, separate from the data the judge uses. Returns d_success with CI. Capped per run; use it to pick what to spend a charged proposal on.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "op": {
+      "type": "string",
+      "description": "op name"
+     },
+     "cfg": {
+      "type": "object",
+      "description": "the op's arguments"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "op",
+     "cfg"
+    ]
+   }
+  },
+  {
+   "name": "sweep",
+   "description": "FREE strength sweep: one op, one numeric parameter (e.g. gamma, or a dotted path like ops.1.cfg.gamma for a composite), 2-9 values. Returns the curve on research episodes and the best value. Each value uses one screen.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "op": {
+      "type": "string",
+      "description": "op name"
+     },
+     "cfg": {
+      "type": "object",
+      "description": "the op's arguments (the swept parameter's value is replaced)"
+     },
+     "param": {
+      "type": "string",
+      "description": "parameter name or dotted path"
+     },
+     "values": {
+      "type": "array",
+      "items": {
+       "type": "number"
+      },
+      "description": "2-9 values"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "op",
+     "cfg",
+     "param",
+     "values"
+    ]
+   }
+  },
+  {
+   "name": "propose",
+   "description": "CHARGED evaluation of one edit against the unedited model on the selection set (rejected proposals are charged too). Returns d_success, CI, id_drop, accepted.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "op": {
+      "type": "string",
+      "description": "op name"
+     },
+     "cfg": {
+      "type": "object",
+      "description": "the op's arguments"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "op",
+     "cfg"
+    ]
+   }
+  },
+  {
+   "name": "status",
+   "description": "Budget left and ledger integrity.",
+   "parameters": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false,
+    "required": []
+   }
+  },
+  {
+   "name": "state",
+   "description": "Compact digest of this run (budget, best charged edit, history, recent probes, your notes). Use it to resume after a context reset.",
+   "parameters": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false,
+    "required": []
+   }
+  }
+ ]
+}

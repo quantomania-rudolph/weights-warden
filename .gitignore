@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Harness run artifacts (agents write these locally)
+runs/
+
+# Large / generated assets
+models/
+evidence/
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+engine/core/audit_cache.pkl
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+*.pem

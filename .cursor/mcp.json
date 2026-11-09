@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "weight-editing-harness": {
+      "command": "python3",
+      "args": ["${workspaceFolder}/engine/server/mcp_server.py"]
+    }
+  }
+}
