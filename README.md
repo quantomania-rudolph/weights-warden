@@ -1,5 +1,7 @@
 # Weights Warden
 
+**Maintainers:** [quantomania-rudolph](https://github.com/quantomania-rudolph) · **Ethan Marreel** ([HIRO Industries](https://hiroindustries.com)) — [ethan@hiroindustries.com](mailto:ethan@hiroindustries.com) · see [CONTRIBUTORS.md](CONTRIBUTORS.md)
+
 **Weights Warden** gives an LLM **overseer** (or any script) a full **read → localize → edit → judge** loop over a PyTorch model **without training**. Everything below is what the harness actually exposes through MCP and `./h call` — see `agent/TOOLS.md`, `agent/tool_spec.json`, and `engine/agent_tools/dispatch.py`. Tool lists depend on `HARNESS_MODE` in `harness.env` (`llm` for transformers/MLPs via a ModelMap; default for the Nav2D policy demo).
 
 ---
